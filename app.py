@@ -197,6 +197,28 @@ def show_status(data):
 
 
 # ----------------------------
+# Main habit
+# ----------------------------
+# a function to select the main habit by setting the is_main variable of that to true
+# no need for a function to change the main habit as the select_main_habit takes care of changing it
+# to show the main habit, we need a new collumn on the left of the habits table
+# that collumn doesn't have any header and has stars for each habit
+# by clicking on any star, the habit of that row becomes the main habit and its is_main attribute is set to true
+# and by clicking again on the main habit's star, it sets the is_main attribute to false and there won't be any main habit
+
+
+# def select_main_habit(data,habit):
+    # reads the json file 
+    # checks if there's any other habit with is_main set to true
+    # sets all other habits' is_main to false and the selected habit to true
+
+# def deselect_main_habit(habit):
+    #sets is_main variable of the selected habit to false
+
+
+
+
+# ----------------------------
 # Main loop
 # ----------------------------
 

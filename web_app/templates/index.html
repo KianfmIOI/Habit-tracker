@@ -44,6 +44,7 @@
       <table>
         <thead>
           <tr>
+            <th></th>
             <th>Habit</th>
             <th>Created</th>
             <th>Last</th>
@@ -55,6 +56,11 @@
         <tbody>
           {% for habit in habits %}
           <tr>
+            <td>
+              <form method="post" action="{{ url_for('toggle_main_route', habit_name=habit.name) }}" class="inline">
+                <button type="submit" aria-label="Toggle main habit">{{ "★" if habit.is_main else "☆" }}</button>
+              </form>
+            </td>
             <td>{{ habit.name_title }}</td>
             <td>{{ habit.created }}</td>
             <td>{{ habit.last_check }}</td>

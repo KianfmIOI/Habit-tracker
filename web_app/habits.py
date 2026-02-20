@@ -3,10 +3,6 @@ from datetime import date, datetime
 from pathlib import Path
 
 DATA_FILE = Path(__file__).parent / "data.json"
-ROOT_DATA_CANDIDATES = [
-    Path(__file__).resolve().parent.parent / "data.json",
-    Path(__file__).resolve().parent.parent / "habits.json",
-]
 FIRE = "🔥"
 ICE = "🧊"
 
@@ -20,25 +16,11 @@ def _default_data():
 
 
 def load_data():
-    """Load data, seeding from root JSON when local data is absent/empty."""
+    """Load data only from web_app/data.json."""
     try:
         with DATA_FILE.open("r", encoding="utf-8") as f:
             data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-        data = None
-
-    if not data or data == _default_data():
-        for root_file in ROOT_DATA_CANDIDATES:
-            try:
-                with root_file.open("r", encoding="utf-8") as f:
-                    root_data = json.load(f)
-                if isinstance(root_data, dict):
-                    data = root_data
-                    break
-            except (FileNotFoundError, json.JSONDecodeError):
-                continue
-
-    if data is None:
         data = _default_data()
 
     if not isinstance(data, dict):
@@ -50,12 +32,17 @@ def load_data():
 
     if not isinstance(data["habits"], dict):
         data["habits"] = {}
+    else:
+        for habit in data["habits"].values():
+            if isinstance(habit, dict):
+                habit.setdefault("is_main", False)
 
     return data
 
 
 def save_data(data):
-    """Persist habits data to JSON using the CLI-compatible schema."""
+    """Persist habits data only to web_app/data.json."""
+    DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
     with DATA_FILE.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
@@ -97,6 +84,34 @@ def delete_habit(data, name):
     del data["habits"][name]
     save_data(data)
     return True, f"Habit '{name}' deleted."
+
+def select_main_habit(data, habit_name):
+    if habit_name not in data["habits"]:
+        return False, "Habit not found."
+
+    for name, habit in data["habits"].items():
+        habit["is_main"] = name == habit_name
+
+    save_data(data)
+    return True, f"Habit '{habit_name}' is now main."
+
+
+def deselect_main_habit(data, habit_name):
+    if habit_name not in data["habits"]:
+        return False, "Habit not found."
+
+    data["habits"][habit_name]["is_main"] = False
+    save_data(data)
+    return True, f"Habit '{habit_name}' is no longer main."
+
+
+def toggle_main_habit(data, habit_name):
+    if habit_name not in data["habits"]:
+        return False, "Habit not found."
+
+    if data["habits"][habit_name].get("is_main", False):
+        return deselect_main_habit(data, habit_name)
+    return select_main_habit(data, habit_name)
 
 
 def fill_missed_days(habit):
@@ -157,6 +172,7 @@ def get_habit_rows(data):
             {
                 "name": name,
                 "name_title": name.title(),
+                "is_main": habit.get("is_main", False),
                 "created": _format_date(habit.get("creation_date")),
                 "last_check": _format_date(habit.get("last_check_in_date")),
                 "streak": habit.get("streak", 0),
